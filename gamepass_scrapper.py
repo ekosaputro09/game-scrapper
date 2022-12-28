@@ -7,11 +7,15 @@ import gspread
 import requests
 import traceback
 import pandas as pd
+from datetime import datetime
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup as bs
 from gspread_dataframe import set_with_dataframe
 load_dotenv()
 
+
+print("\n" + datetime.now())
+print("Starting Gamepass Scrapper...")
 
 # load worksheet
 gc = gspread.service_account(filename=os.getenv("CREDENTIALS_FILE"))
