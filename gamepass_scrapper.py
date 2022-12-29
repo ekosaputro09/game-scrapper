@@ -14,7 +14,7 @@ from gspread_dataframe import set_with_dataframe
 load_dotenv()
 
 
-print("\n" + datetime.now())
+print("\n" + datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S"))
 print("Starting Gamepass Scrapper...")
 
 # load worksheet
