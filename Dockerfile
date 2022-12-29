@@ -1,6 +1,9 @@
 # import python image version 3.8
 FROM python:3.8
 
+# add maintainer
+MAINTAINER Eko Saputro
+
 # set working directory
 WORKDIR /app
 
@@ -18,15 +21,16 @@ RUN pip install -U numpy
 # copy the content of the local directory to the working directory
 COPY .env .
 COPY .env.example .
-COPY google-sheet-credentials.json .
-COPY gamepass_scrapper.py .
+COPY crontab /etc/cron.d/crontab
 COPY run_scrapper.sh .
+COPY gamepass_scrapper.py .
+COPY google-sheet-credentials.json .
 
 # give execution rights to the script
-RUN chmod 0644 /app/run_scrapper.sh
+RUN chmod 0644 /etc/cron.d/crontab
 
 # add the cron job
-RUN crontab -l | { cat; echo "0 1 * * * bash /app/run_scrapper.sh"; } | crontab -
+RUN /usr/bin/crontab /etc/cron.d/crontab
 
 # run the command on container startup
-CMD cron
+CMD ["cron", "-f"]
