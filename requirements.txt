@@ -26,7 +26,6 @@ importlib-metadata==5.2.0
 importlib-resources==5.10.1
 Jinja2==3.1.2
 jsonschema==4.17.3
-jupyter_client==7.4.8
 jupyter_core==5.1.1
 jupyterlab-pygments==0.2.2
 kiwisolver==1.4.4
@@ -65,7 +64,7 @@ setuptools==65.5.0
 six==1.16.0
 soupsieve==2.3.2.post1
 tinycss2==1.2.1
-tornado==6.2
+tornado==6.1
 traitlets==5.8.0
 tzdata==2022.7
 tzlocal==4.2
