@@ -31,26 +31,30 @@ doc = bs(resp.text, "html.parser")
 # loop through each row and section
 data = pd.DataFrame()
 for i in range(1, 10):
-    print(f"\nRow {i}")
-    row = doc.find("div", id=f"row{i}")
-    sections = row.find_all("div", class_="et_pb_with_border")
+    try:
+        print(f"\nRow {i}")
+        row = doc.find("div", id=f"row{i}")
+        sections = row.find_all("div", class_="et_pb_with_border")
 
-    for j in range(0, len(sections), 2):
-        section = sections[j]
-        title = section.find("h3").text
-        print(title)
-        games = section.find_all("li")
-        print(len(games))
+        for j in range(0, len(sections), 2):
+            section = sections[j]
+            title = section.find("h3").text
+            print(title)
+            games = section.find_all("li")
+            print(len(games))
 
-        # create list of games
-        list_games = []
-        for game in games:
-            list_games.append(game.text)
+            # create list of games
+            list_games = []
+            for game in games:
+                list_games.append(game.text)
 
-        # concat dataframe
-        df = pd.DataFrame(pd.Series(list_games))
-        df.rename(columns={0: title}, inplace=True)
-        data = pd.concat([data, df], axis=1)
+            # concat dataframe
+            df = pd.DataFrame(pd.Series(list_games))
+            df.rename(columns={0: title}, inplace=True)
+            data = pd.concat([data, df], axis=1)
+    except AttributeError:
+        print("No more rows")
+        continue
 
 # save data to worksheet
 set_with_dataframe(worksheet, data)
