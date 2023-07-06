@@ -26,7 +26,9 @@ worksheet.resize(1)
 # get and parse data from website
 session = requests.Session()
 resp = session.get(os.getenv("GAMEPASS_URL"))
+print(resp)
 doc = bs(resp.text, "html.parser")
+print(doc)
 
 # loop through each row and section
 data = pd.DataFrame()
@@ -34,6 +36,7 @@ for i in range(1, 10):
     try:
         print(f"\nRow {i}")
         row = doc.find("div", id=f"row{i}")
+        print(row)
         sections = row.find_all("div", class_="et_pb_with_border")
 
         for j in range(0, len(sections), 2):
@@ -53,6 +56,7 @@ for i in range(1, 10):
             df.rename(columns={0: title}, inplace=True)
             data = pd.concat([data, df], axis=1)
     except AttributeError:
+        print(traceback.format_exc())
         print("No more rows")
         continue
 
