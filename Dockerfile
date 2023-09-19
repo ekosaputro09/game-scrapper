@@ -2,7 +2,7 @@
 FROM python:3.8
 
 # add maintainer
-MAINTAINER Eko Saputro
+LABEL Eko Saputro
 
 # set working directory
 WORKDIR /app
