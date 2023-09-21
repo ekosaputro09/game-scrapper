@@ -22,9 +22,10 @@ RUN pip install -U numpy
 COPY .env .
 COPY .env.example .
 COPY crontab /etc/cron.d/crontab
-COPY run_scrapper.sh .
 COPY gamepass_scrapper.py .
 COPY google-sheet-credentials.json .
+COPY run_scrapper.sh .
+COPY xbox_deals_scrapper.py .
 
 # give execution rights to the script
 RUN chmod 0644 /etc/cron.d/crontab
