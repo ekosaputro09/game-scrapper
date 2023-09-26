@@ -3,50 +3,36 @@
 
 
 import os
-import re
-import gspread
-import requests
-import traceback
-import pandas as pd
-from datetime import datetime
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup as bs
-from gspread_dataframe import set_with_dataframe
 load_dotenv()
 
 
-def get_exch_rate(cur, base_cur='USD', date=None):
-    assert len(cur) == 3, f'Not valid currency: {cur}'
-    assert len(base_cur) == 3, f'Not valid base currency: {base_cur}'
+def get_exch_rate():
+    from currency_converter import CurrencyConverter
 
-    date_str = 'latest' if date is None else str(date)
-    url = f'http://api.exchangeratesapi.io/v1/{date_str}'  # HTTPS only for paid subscriptions
-    params = {
-        'access_key' : os.getenv("ACCESS_KEY_CURRENCY_CONVERTER"),
-        'symbols' : f'{cur},{base_cur}',
-    }
-
-    resp = requests.get(url, params=params)
-    if not resp.ok:
-        resp.raise_for_status()
-
-    data = resp.json()
-    rates = data['rates']
-
-    rate = rates[cur] / rates[base_cur]
+    cr = CurrencyConverter(fallback_on_wrong_date=True)
+    rate = cr.convert(1, "TRY", "IDR")
 
     return rate
 
 
 def clean_price(str_price):
+    import re
 
-    clean_price = re.sub("[$,]", "", str_price)
+    clean_price = re.sub("[₺,]", "", str_price)
     price = float(clean_price)
 
     return price
 
 
 def scraping():
+    import time
+    import json
+    import requests
+    import pandas as pd
+    from datetime import datetime
+    from bs4 import BeautifulSoup as bs
+
     print("\n" + datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S"))
     print("Starting Xbox Deals Scrapper...")
 
@@ -55,7 +41,6 @@ def scraping():
     next = True
     session = requests.Session()
 
-    # game_types, game_titles, original_prices, sale_discounts, sale_prices, bonus_services, bonus_discounts, bonus_prices, valid_dates, ends_in, ratings, rating_counts = [], [], [] , [], [], [], [], [], [], [], [], []
     game_sales = []
     while next:
         response = session.get(os.getenv("XBOX_DEALS_URL").format(str(page)))
@@ -70,6 +55,7 @@ def scraping():
         game_links = doc.find_all("a", class_="game-collection-item-link")
 
         for game_link in game_links:
+            time.sleep(10)
             game_sale = []
             print("\n==================")
 
@@ -78,7 +64,7 @@ def scraping():
             game_type = game_container.find("div", class_="game-collection-item-type").text
             print(game_type)
             game_sale.append(game_type)
-            
+
             # game details
             game_item = game_link.find("div", class_="game-collection-item-details")
 
@@ -92,7 +78,7 @@ def scraping():
             print(original_price)
             game_sale.append(original_price)
 
-            original_price_idr = clean_price(original_price) * get_exch_rate("IDR", "ARS")
+            original_price_idr = clean_price(original_price) * get_exch_rate()
             print(original_price_idr)
             game_sale.append(original_price_idr)
 
@@ -106,7 +92,7 @@ def scraping():
                 print(sale_price)
                 game_sale.append(sale_price)
 
-                sale_price_idr = clean_price(sale_price) * get_exch_rate("IDR", "ARS")
+                sale_price_idr = clean_price(sale_price) * get_exch_rate()
                 print(sale_price_idr)
                 game_sale.append(sale_price_idr)
 
@@ -118,8 +104,8 @@ def scraping():
             # game service bonus type
             try:
                 bonus_service = game_item.find("img", class_="game-collection-item-icon-bonus", alt=True)['alt']
-                print("EA" if bonus_service=="ea" else "GAMEPASS")
-                game_sale.append("EA" if bonus_service=="ea" else "GAMEPASS")
+                print("EA" if bonus_service=="ea" else "GAMEPASS" if bonus_service=="pass" else bonus_service)
+                game_sale.append("EA" if bonus_service=="ea" else "GAMEPASS" if bonus_service=="pass" else bonus_service)
             except TypeError:
                 game_sale.append(None)
 
@@ -134,7 +120,7 @@ def scraping():
                 game_sale.append(bonus_price)
 
                 if bonus_price != "FREE":
-                    bonus_price_idr = clean_price(bonus_price) * get_exch_rate("IDR", "ARS")
+                    bonus_price_idr = clean_price(bonus_price) * get_exch_rate()
                     print(bonus_price_idr)
                     game_sale.append(bonus_price_idr)
                 else:
@@ -180,12 +166,18 @@ def scraping():
 
 
     data_sales = pd.DataFrame(game_sales)
-    data_sales.columns = os.getenv("XBOX_SHEET_COLUMNS").split(",")
+    data_sales.columns = json.loads(os.getenv("XBOX_SHEET_COLUMNS"))
 
     return data_sales
 
 
 def write_to_sheet(data):
+    import gspread
+    from gspread_dataframe import set_with_dataframe
+
+    # sorting data
+    data.sort_values(by=['Bonus','Valid Until','Discount'], na_position='first', inplace=True, ignore_index=True)
+
     # load worksheet
     gc = gspread.service_account(filename=os.getenv("CREDENTIALS_FILE"))
     sh = gc.open_by_key(os.getenv("SPREADSHEET_KEY"))

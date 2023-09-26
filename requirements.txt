@@ -2,6 +2,7 @@ beautifulsoup4==4.12.2
 cachetools==5.3.1
 certifi==2023.5.7
 charset-normalizer==3.1.0
+currency_converter
 google-auth==2.21.0
 google-auth-oauthlib==1.0.0
 gspread==5.10.0
