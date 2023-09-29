@@ -7,9 +7,9 @@ LABEL Eko Saputro
 # set working directory
 WORKDIR /app
 
-# install Cron
+# install Cron and Nano
 RUN apt-get update
-RUN apt-get -y install cron
+RUN apt-get -y install cron nano
 
 # copy the dependencies file to the working directory
 COPY requirements.txt .
